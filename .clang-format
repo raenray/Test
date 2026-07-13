@@ -1,0 +1,68 @@
+BasedOnStyle: Microsoft
+AccessModifierOffset: -4
+ColumnLimit: 200
+
+# ── braces ── all on their own line ──────────────────────────────────
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass:      true
+  AfterControlStatement: Always
+  AfterEnum:       true
+  AfterFunction:   true
+  AfterNamespace:  true
+  AfterStruct:     true
+  AfterUnion:      true
+  BeforeCatch:     true
+  BeforeElse:      true
+  IndentBraces:    false
+
+# ── spacing ───────────────────────────────────────────────────────────
+
+SpaceAfterCStyleCast:       true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens:           ControlStatements
+SpaceInEmptyParentheses:     false
+SpacesInAngles:              false
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses:         false
+SpacesInSquareBrackets:      false
+
+# ── alignment / wrapping ──────────────────────────────────────────────
+
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakTemplateDeclarations: Yes
+BinPackArguments: false
+BinPackParameters: false
+BreakConstructorInitializers: BeforeComma
+SeparateDefinitionBlocks: Always
+
+# ── indentation ───────────────────────────────────────────────────────
+
+IndentCaseLabels: true
+IndentWidth: 4
+UseTab: Never
+NamespaceIndentation: None
+
+# ── pointer / reference ───────────────────────────────────────────────
+
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# ── includes ──────────────────────────────────────────────────────────
+
+SortIncludes: false
+IncludeBlocks: Preserve
+
+# ── misc ──────────────────────────────────────────────────────────────
+
+Cpp11BracedListStyle: true
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+PenaltyBreakBeforeFirstCallParameter: 0
+PenaltyExcessCharacter: 1
+CompactNamespaces: false
