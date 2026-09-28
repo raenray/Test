@@ -37,3 +37,7 @@ target_link_libraries(Test PRIVATE
 target_compile_definitions(Test PUBLIC
     SOURCE_DIR="${CMAKE_SOURCE_DIR}/"
 )
+
+target_compile_definitions(Test PUBLIC
+    SHADER_DIR="${CMAKE_SOURCE_DIR}/shaders"
+)

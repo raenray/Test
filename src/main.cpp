@@ -103,7 +103,7 @@ static std::vector<char> read_file(const std::string& filename)
 
     if (!file.is_open())
     {
-        throw std::runtime_error("failed to open file!");
+        throw std::runtime_error("failed to open file: " + filename);
     }
     size_t file_size = (size_t) file.tellg();
     std::vector<char> buffer(file_size);
@@ -145,6 +145,7 @@ private:
         create_logical_device();
         create_swap_chain();
         create_image_views();
+        create_render_pass();
         create_graphics_pipeline();
     }
 
@@ -576,11 +577,37 @@ private:
         }
     }
 
+    void create_render_pass()
+    {
+        VkAttachmentDescription color_attachment{
+            .flags = 0,
+            .format = swap_chain_image_format_,
+            .samples = VK_SAMPLE_COUNT_1_BIT,
+            .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+            .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+            .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+            .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+            .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+            .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+        };
+
+        VkAttachmentReference color_attachment_ref = 
+        {
+            .attachment = 0,
+            .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        };
+
+        VkSubpassDescription subpass = {};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &color_attachment_ref;
+    }
+
     void create_graphics_pipeline()
     {
         //
-        auto vert_shader_code = read_file("shaders/vert.spv");
-        auto frag_shader_code = read_file("shaders/frag.spv");
+        auto vert_shader_code = read_file(SHADER_DIR "/vert.spv");
+        auto frag_shader_code = read_file(SHADER_DIR "/frag.spv");
 
         VkShaderModule vertShaderModule = create_shader_module(vert_shader_code);
         VkShaderModule fragShaderModule = create_shader_module(frag_shader_code);
@@ -708,6 +735,21 @@ private:
             .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
         };
 
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo{
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .setLayoutCount = 0,
+            .pSetLayouts = nullptr,
+            .pushConstantRangeCount = 0,
+            .pPushConstantRanges = nullptr,
+        };
+
+        if (vkCreatePipelineLayout(device_, &pipelineLayoutInfo, nullptr, &pipeline_layout_) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create pipeline layout!");
+        }
+
         vkDestroyShaderModule(device_, fragShaderModule, nullptr);
         vkDestroyShaderModule(device_, vertShaderModule, nullptr);
     }
@@ -741,6 +783,7 @@ private:
 
     void cleanup()
     {
+        vkDestroyPipelineLayout(device_, pipeline_layout_, nullptr);
         for (auto image_view : swap_chain_image_views_)
         {
             vkDestroyImageView(device_, image_view, nullptr);
@@ -775,6 +818,7 @@ private:
     VkFormat swap_chain_image_format_{VK_FORMAT_UNDEFINED};
     VkExtent2D swap_chain_extent_{};
     std::vector<VkImageView> swap_chain_image_views_;
+    VkPipelineLayout pipeline_layout_{VK_NULL_HANDLE};
 };
 
 int main()
