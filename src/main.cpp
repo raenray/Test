@@ -1034,7 +1034,7 @@ private:
             glfwPollEvents();
             draw_frame();
         }
-        
+
         vkDeviceWaitIdle(device_);
     }
 
@@ -1089,11 +1089,11 @@ private:
     VkPipelineLayout pipeline_layout_{VK_NULL_HANDLE};
     VkPipeline graphics_pipeline_{VK_NULL_HANDLE};
     std::vector<VkFramebuffer> swap_chain_framebuffers_;
-    VkCommandPool command_pool_;
-    VkCommandBuffer command_buffer_;
-    VkSemaphore image_available_semaphore_;
-    VkSemaphore render_finished_semaphore_;
-    VkFence in_flight_fence_;
+    VkCommandPool command_pool_{VK_NULL_HANDLE};
+    VkCommandBuffer command_buffer_{VK_NULL_HANDLE};
+    VkSemaphore image_available_semaphore_{VK_NULL_HANDLE};
+    VkSemaphore render_finished_semaphore_{VK_NULL_HANDLE};
+    VkFence in_flight_fence_{VK_NULL_HANDLE};
 };
 
 int main()
