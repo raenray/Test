@@ -39,5 +39,5 @@ target_compile_definitions(Test PUBLIC
 )
 
 target_compile_definitions(Test PUBLIC
-    SHADER_DIR="${CMAKE_SOURCE_DIR}/shaders"
+    SHADER_DIR="${CMAKE_SOURCE_DIR}/shaders/"
 )

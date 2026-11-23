@@ -591,8 +591,7 @@ private:
             .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
         };
 
-        VkAttachmentReference color_attachment_ref = 
-        {
+        VkAttachmentReference color_attachment_ref = {
             .attachment = 0,
             .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         };
@@ -601,16 +600,33 @@ private:
         subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpass.colorAttachmentCount = 1;
         subpass.pColorAttachments = &color_attachment_ref;
+
+        VkRenderPassCreateInfo render_pass_info{
+            .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .attachmentCount = 1,
+            .pAttachments = &color_attachment,
+            .subpassCount = 1,
+            .pSubpasses = &subpass,
+            .dependencyCount = 0,
+            .pDependencies = nullptr,
+        };
+
+        if (vkCreateRenderPass(device_, &render_pass_info, nullptr, &render_pass_) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create render pass!");
+        }
     }
 
     void create_graphics_pipeline()
     {
         //
-        auto vert_shader_code = read_file(SHADER_DIR "/vert.spv");
-        auto frag_shader_code = read_file(SHADER_DIR "/frag.spv");
+        auto vert_shader_code = read_file(SHADER_DIR "vert.spv");
+        auto frag_shader_code = read_file(SHADER_DIR "frag.spv");
 
-        VkShaderModule vertShaderModule = create_shader_module(vert_shader_code);
-        VkShaderModule fragShaderModule = create_shader_module(frag_shader_code);
+        VkShaderModule vert_shader_module = create_shader_module(vert_shader_code);
+        VkShaderModule frag_shader_module = create_shader_module(frag_shader_code);
 
         //
         VkPipelineShaderStageCreateInfo vert_shader_stage_info{
@@ -618,7 +634,7 @@ private:
             .pNext = nullptr,
             .flags = 0,
             .stage = VK_SHADER_STAGE_VERTEX_BIT,
-            .module = vertShaderModule,
+            .module = vert_shader_module,
             .pName = "main",
             .pSpecializationInfo = nullptr,
         };
@@ -628,12 +644,12 @@ private:
             .pNext = nullptr,
             .flags = 0,
             .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .module = fragShaderModule,
+            .module = frag_shader_module,
             .pName = "main",
             .pSpecializationInfo = nullptr,
         };
 
-        VkPipelineShaderStageCreateInfo shaderStages[] = {
+        VkPipelineShaderStageCreateInfo shader_stages[] = {
             vert_shader_stage_info,
             frag_shader_stage_info,
         };
@@ -652,7 +668,7 @@ private:
             .pDynamicStates = dynamic_states.data(),
         };
 
-        VkPipelineVertexInputStateCreateInfo vertexInputInfo{
+        VkPipelineVertexInputStateCreateInfo vertex_input_info{
             .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
             .pNext = nullptr,
             .flags = 0,
@@ -685,7 +701,7 @@ private:
             .extent = swap_chain_extent_,
         };
 
-        VkPipelineViewportStateCreateInfo viewportState{
+        VkPipelineViewportStateCreateInfo viewport_state{
             .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
             .pNext = nullptr,
             .flags = 0,
@@ -735,7 +751,18 @@ private:
             .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
         };
 
-        VkPipelineLayoutCreateInfo pipelineLayoutInfo{
+        VkPipelineColorBlendStateCreateInfo color_blending{
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .logicOpEnable = VK_FALSE,
+            .logicOp = VK_LOGIC_OP_COPY,
+            .attachmentCount = 1,
+            .pAttachments = &color_blend_attachment,
+            .blendConstants = {0.0f, 0.0f, 0.0f, 0.0f},
+        };
+
+        VkPipelineLayoutCreateInfo pipeline_layout_info{
             .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
             .pNext = nullptr,
             .flags = 0,
@@ -745,13 +772,40 @@ private:
             .pPushConstantRanges = nullptr,
         };
 
-        if (vkCreatePipelineLayout(device_, &pipelineLayoutInfo, nullptr, &pipeline_layout_) != VK_SUCCESS)
+        if (vkCreatePipelineLayout(device_, &pipeline_layout_info, nullptr, &pipeline_layout_) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create pipeline layout!");
         }
 
-        vkDestroyShaderModule(device_, fragShaderModule, nullptr);
-        vkDestroyShaderModule(device_, vertShaderModule, nullptr);
+        VkGraphicsPipelineCreateInfo pipeline_info{
+            .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .stageCount = 2,
+            .pStages = shader_stages,
+            .pVertexInputState = &vertex_input_info,
+            .pInputAssemblyState = &input_assembly,
+            .pTessellationState = nullptr,
+            .pViewportState = &viewport_state,
+            .pRasterizationState = &rasterizer,
+            .pMultisampleState = &multisampling,
+            .pDepthStencilState = nullptr,
+            .pColorBlendState = &color_blending,
+            .pDynamicState = &dynamic_state,
+            .layout = pipeline_layout_,
+            .renderPass = render_pass_,
+            .subpass = 0,
+            .basePipelineHandle = VK_NULL_HANDLE,
+            .basePipelineIndex = -1,
+        };
+
+        if (vkCreateGraphicsPipelines(device_, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &graphics_pipeline_) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create graphics pipeline!");
+        }
+
+        vkDestroyShaderModule(device_, frag_shader_module, nullptr);
+        vkDestroyShaderModule(device_, vert_shader_module, nullptr);
     }
 
     VkShaderModule create_shader_module(const std::vector<char>& code)
@@ -783,7 +837,9 @@ private:
 
     void cleanup()
     {
+        vkDestroyPipeline(device_, graphics_pipeline_, nullptr);
         vkDestroyPipelineLayout(device_, pipeline_layout_, nullptr);
+        vkDestroyRenderPass(device_, render_pass_, nullptr);
         for (auto image_view : swap_chain_image_views_)
         {
             vkDestroyImageView(device_, image_view, nullptr);
@@ -818,7 +874,9 @@ private:
     VkFormat swap_chain_image_format_{VK_FORMAT_UNDEFINED};
     VkExtent2D swap_chain_extent_{};
     std::vector<VkImageView> swap_chain_image_views_;
+    VkRenderPass render_pass_{VK_NULL_HANDLE};
     VkPipelineLayout pipeline_layout_{VK_NULL_HANDLE};
+    VkPipeline graphics_pipeline_{VK_NULL_HANDLE};
 };
 
 int main()
